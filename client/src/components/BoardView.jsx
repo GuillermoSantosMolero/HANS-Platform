@@ -105,6 +105,7 @@ export default function BoardView({
         strokeWidth="5px"
         fill="none"
       />
+      {/* Pintamos los puntos para las respuestas */}
       {answerPoints.map((p, i) => (
         <circle
           key={i}
@@ -116,6 +117,7 @@ export default function BoardView({
           strokeWidth="2"
         />
       ))}
+      {/* Asignamos los puntos a las respuestas */}
       {answersText.map((anchor, i) => (
         <text
           key={anchor.text}
@@ -129,6 +131,7 @@ export default function BoardView({
           {anchor.text}
         </text>
       ))}
+      {/* Círculo que marca la media de las respuestas*/}
       <circle
         cx={cuePosition.x}
         cy={cuePosition.y}
@@ -137,6 +140,7 @@ export default function BoardView({
         stroke="black"
         strokeWidth="2"
       />
+      {/*Rectángulo que marca las respuestas de otros participantes*/}
       <g transform={`translate(-${halfMagnetSize}, -${halfMagnetSize})`}>
         {peerMagnetPositions.map(normPosition => denormalizePosition(normPosition)).map((point, i) => (
           <rect
@@ -192,7 +196,8 @@ export default function BoardView({
           stroke='black'
         />
       </g>
-      ) /* END OF DEBUG VISUALIZATION */ }
+      ) /* END OF DEBUG VISUALIZATION*/ }
+      {/* Círculo que marca la respuesta del usuario*/}
       <circle
         cx={userMagnetPosition.x}
         cy={userMagnetPosition.y}

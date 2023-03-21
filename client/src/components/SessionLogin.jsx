@@ -17,9 +17,11 @@ export default function SessionLogin({ username = null, onJoinSession=()=>{} }) 
 
   const joinSession = async (event) => {
     event.preventDefault();
+    // Recogemos el elemento que genero el evento en este caso el formulario
     const formData = new FormData(event.currentTarget);
-
+    // Recoge el valor asociado al id del elemento
     const sessionId = formData.get('session-id');
+    //Saca error si el id de la sesión no es numérico
     if(!sessionId.trim().length || isNaN(sessionId)) {
       setError({title: "Invalid session ID", msg: "Only integer numbers are valid"});
       return;

@@ -84,6 +84,7 @@ class ServerAPI(Thread, QObject):
 
             return jsonify([participant.as_dict for participant in session.participants])
 
+        # función que escucha la petición del componente sessionLogin
         @self.app.route('/api/session/<int:session_id>/participants', methods=['POST'])
         def api_session_add_participant(session_id: int):
             if 'user' not in request.json:

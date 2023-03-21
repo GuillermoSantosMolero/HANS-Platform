@@ -101,11 +101,12 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
                 id: data.id,
                 prompt: data.prompt,
                 answers: data.answers,
-                image: `/api/question/${data.id}/image`
+                image: `/api/question/${data.id}/image`,
               });
               sessionRef.current.publishControl({type: 'ready'});
             }
           });
+          setUserMagnetPosition({x: 0, y: 0, norm: []})
         } else {
           res.text().then(msg => console.log(msg));
         }
@@ -149,7 +150,11 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
 
   const onUserMagnetMove = (position) => {
     if(sessionStatus !== SessionStatus.Active) return;
-
+    for(let i=0; i<position.norm.length;i++){
+      if(position.norm[i]>1){
+        position.norm[i]=1
+      }
+    }
     setUserMagnetPosition(position);
     sessionRef.current.publishUpdate({data: {position: position.norm}});
   };

@@ -30,12 +30,17 @@ class Session {
         });
         });
         this.client.on('message', (topic, message) => {
+            //Guardamos los datos del topic y los spliteamos en un array de strings
         const topic_data = topic.split('/', 5);
+        //Comprobamos que los datos tengan el formato correcto
         if(
             (topic_data.length < 4)
             || (topic_data[0] !== 'swarm')
             || (topic_data[1] !== 'session')
-            || !topic_data[2].length || isNaN(topic_data[2])
+            //Para comprobar que la posicion 2 no sea vacía
+            || !topic_data[2].length 
+            //Comprueba que sea un numero ya que esta es la posicion del id de la session
+            || isNaN(topic_data[2])
         ) {
             console.log(`[MQTT] Invalid topic '${topic}'`);
             return;
@@ -62,18 +67,23 @@ class Session {
         }
         });
     }
+    //Para que el cliente publique un mensaje de control en el que incluirá datos en formato JSON
     publishControl(controlMessage) {
+        console.log(controlMessage);
         this.client.publish(
         `swarm/session/${this.sessionId}/control/${this.participantId}`,
         JSON.stringify(controlMessage)
         );
     }
+    //Para que el cliente publique un mensaje de actualización en el que incluirá datos en formato JSON
+    //Típicamente estos datos harán referencia a la posición de la bolita de nuestro componenete BoardView
     publishUpdate(updateMessage) {
         this.client.publish(
         `swarm/session/${this.sessionId}/updates/${this.participantId}`,
         JSON.stringify(updateMessage)
         );
     }
+    //Para cerrar la conexión
     close() {
         this.client.end();
     }
