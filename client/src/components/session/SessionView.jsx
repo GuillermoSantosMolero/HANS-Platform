@@ -150,10 +150,12 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
 
   const onUserMagnetMove = (position) => {
     if(sessionStatus !== SessionStatus.Active) return;
-    for(let i=0; i<position.norm.length;i++){
-      if(position.norm[i]>1){
-        position.norm[i]=1
-      }
+    let sumPositions = 0
+    for(let i=0; i<position.norm.length;i++)
+      sumPositions+=position.norm[i];
+    if(sumPositions>1){
+      for(let i=0; i<position.norm.length;i++)
+      position.norm[i]=position.norm[i]/sumPositions;
     }
     setUserMagnetPosition(position);
     sessionRef.current.publishUpdate({data: {position: position.norm}});
