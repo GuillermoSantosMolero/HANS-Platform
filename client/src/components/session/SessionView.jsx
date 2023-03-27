@@ -163,10 +163,25 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
 
   const onLeaveSessionClick = () => {
     // TODO: User should double-check the intention to logout (showing a modal when the leave/logout button is pressed)
-
     // TODO: The server should be notified about the user leaving the session:
     //sessionRef.current.leave()
-
+    fetch(
+      `/api/session/${sessionId}/participants/${participantId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    ).then(res => {
+      if(res.status === 200) {
+        res.json().then(data => {
+        });
+      } else {
+      }
+    }).catch(error => {
+    });
     onLeave();
   }
 
@@ -225,6 +240,8 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
           >
           <QuestionDetails
             image={question.status === QuestionStatus.Loaded ? question.image : ""}
+            prompt={question.status === QuestionStatus.Loaded ? question.prompt : "Question not defined yet"}
+            timeInSecs={question.status === QuestionStatus.Loaded ? 30 : 0}
           />
           </Paper>
           <Paper

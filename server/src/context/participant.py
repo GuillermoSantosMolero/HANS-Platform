@@ -10,6 +10,7 @@ class Participant(QObject):
         JOINED = 'joined'
         READY = 'ready'
         ACTIVE = 'active'
+        OFFLINE = 'offline'
 
     on_status_changed = pyqtSignal(QObject, Status)
 

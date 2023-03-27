@@ -3,7 +3,7 @@ import { React } from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-export default function QuestionDetails({ image }) {
+export default function QuestionDetails({ image , timeInSecs, prompt}) {
   return (
     <Box
       sx={{
@@ -17,10 +17,10 @@ export default function QuestionDetails({ image }) {
         width="100%"
       />
       <Typography component="h4" variant="h6" textAlign='center'>
-        <b>Question 1</b>
+        <b>{prompt}</b>
       </Typography>
       <Typography component="span" textAlign='center'>
-        00:00:30
+        {timeInSecs}
       </Typography>
     </Box>
   )

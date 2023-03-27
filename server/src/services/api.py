@@ -95,18 +95,27 @@ class ServerAPI(Thread, QObject):
             if session is None:
                 return "Session not found", 404
 
-            if any(username == participant.username for participant in session.participants.values()):
+            if any(username == participant.username and participant.status!=Participant.Status.OFFLINE for participant in session.participants.values()):
                 return "Participant already joined session", 400
 
-            participant = Participant(username)
-            session.add_participant(participant)
+            participant = session.add_participant(username)
 
             return jsonify(participant.as_dict)
 
-        @self.app.route('/api/session/<int:session_id>/participants/<int:participant_id>', methods=['DELETE'])
+        @self.app.route('/api/session/<int:session_id>/participants/<int:participant_id>', methods=['POST'])
         def api_session_remove_participant(session_id: int, participant_id: int):
-            # TODO: Implement the participant delete endpoint
-            return "Not implemented", 500
+            session = AppContext.sessions.get(session_id, None)
+            if session is None:
+                return "Session not found", 404
+
+            if any(participant_id == participant.id for participant in session.participants.values()):
+                if any(participant_id == participant.id and participant.status==Participant.Status.OFFLINE for participant in session.participants.values()):
+                    return "Participant already leaved session", 400
+                else:
+                    session.remove_participant(participant_id)
+            else:
+                return "Participant not found", 404
+            return "Bye"
 
         @self.app.route('/api/question/<int:question_id>')
         def api_question_handle(question_id: int):

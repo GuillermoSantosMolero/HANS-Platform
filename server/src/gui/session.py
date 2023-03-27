@@ -99,10 +99,10 @@ class SessionPanelWidget(QWidget):
         self.start_btn.setEnabled(False)
         self.participants_ready_txt.setText(f"{session.ready_participants_count}/{len(session.participants)} participants")
 
-    @pyqtSlot(int, int)
-    def on_participants_ready_changed(self, ready_count, total_count):
+    @pyqtSlot(int, int, int)
+    def on_participants_ready_changed(self, ready_count, offline_count, total_count):
         if self.session.status == Session.Status.WAITING:
-            self.start_btn.setEnabled(ready_count == total_count)
+            self.start_btn.setEnabled(((ready_count + offline_count) == total_count) and ready_count > 0)
             self.participants_ready_txt.setText(f"{ready_count}/{total_count} participants")
 
     ### START / STOP
@@ -160,13 +160,14 @@ class SessionPanelWidget(QWidget):
 
         # Update participants ready count
         participants_ready_count = session.ready_participants_count
+        participants_offline_count = session.offline_participants_count
         participants_total_count = len(session.participants)
         self.participants_ready_txt.setText(f"{participants_ready_count}/{participants_total_count} participants")
 
         # Configure Start/Stop button
         if session.status == Session.Status.WAITING:
             self.start_btn.setText('Start')
-            self.start_btn.setEnabled((participants_ready_count == participants_total_count) and (participants_total_count > 0))
+            self.start_btn.setEnabled(((participants_ready_count + participants_offline_count) == participants_total_count) and (participants_total_count > 0))
         elif session.status == Session.Status.ACTIVE:
             self.start_btn.setText('Stop')
             self.start_btn.setEnabled(True)

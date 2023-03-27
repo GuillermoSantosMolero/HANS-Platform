@@ -120,14 +120,13 @@ class Session(QObject):
 
         Emitted when the a new participant joins the session.
     '''
-
-    on_participants_ready_changed = pyqtSignal(int, int)
+    on_participants_ready_changed = pyqtSignal(int, int, int)
     '''
         `on_participants_ready_changed(ready_count: int, total_count: int)`
 
         Emitted when the number of ready participants changed.
     '''
-
+    
     on_start = pyqtSignal(QObject, bool)
     '''
         `on_start(session: Session, started: bool)`
@@ -184,8 +183,9 @@ class Session(QObject):
     @active_question.setter
     def active_question(self, question: Union[int, Question]):
         for participant in self.participants.values():
-            participant.status = Participant.Status.JOINED
-        self.on_participants_ready_changed.emit(0, len(self.participants))
+            if(participant.status!=Participant.Status.OFFLINE):
+                participant.status = Participant.Status.JOINED
+        self.on_participants_ready_changed.emit(0,self.offline_participants_count, len(self.participants))
 
         if question is None or isinstance(question, Question):
             self._question = question
@@ -209,6 +209,13 @@ class Session(QObject):
             )
 
     @property
+    def offline_participants_count(self):
+        return sum(
+                participant.status == Participant.Status.OFFLINE
+                for participant in self.participants.values()
+            )
+    
+    @property
     def as_dict(self):
         return {
             'id': self.id,
@@ -217,19 +224,44 @@ class Session(QObject):
             'duration': self.duration,
         }
 
-    def add_participant(self, participant: Participant):
-        self.participants[participant.id] = participant
-        self.on_participant_joined.emit(self, participant)
+    def add_participant(self, username: str):
+        inList = False
+        participantReturn = None
+        for participant in self.participants.values():
+            if(participant.username==username):
+                inList = True
+                participant.status = Participant.Status.JOINED
+                participantReturn = participant
+        if(inList != True):
+            participant = Participant(username)
+            self.participants[participant.id] = participant
+            participantReturn = participant
+            self.on_participant_joined.emit(self, participant)
+        return participantReturn
+
+    def remove_participant(self, participant_id: int):
+        participant = self.participants.get(participant_id, None)
+        if participant is None:
+            print(f"ERROR: Participant [id={participant_id}] not found in Session [id={self.id}]")
+            return
+        participant.status = Participant.Status.OFFLINE
+        self.on_participants_ready_changed.emit(
+            self.ready_participants_count,
+            self.offline_participants_count,
+            len(self.participants)
+        )
+
 
     def participant_ready_handler(self, participant_id: int):
         participant = self.participants.get(participant_id, None)
         if participant is None:
             print(f"ERROR: Participant [id={participant_id}] not found in Session [id={self.id}]")
             return
-
-        participant.status = Participant.Status.READY
+        if(participant.status == Participant.Status.JOINED):
+            participant.status = Participant.Status.READY
         self.on_participants_ready_changed.emit(
             self.ready_participants_count,
+            self.offline_participants_count,
             len(self.participants)
         )
 
