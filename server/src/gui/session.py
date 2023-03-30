@@ -2,6 +2,7 @@ from PyQt5.QtCore import QTime, QTimer, pyqtSlot
 from PyQt5.QtWidgets import (QComboBox, QGridLayout, QGroupBox, QLabel,
                              QLineEdit, QListWidget, QListWidgetItem,
                              QPushButton, QStackedWidget, QVBoxLayout, QWidget)
+from PyQt5 import QtGui
 
 from src.context import AppContext, Participant, Session
 from src.context.session import SessionCommunicator
@@ -110,6 +111,7 @@ class SessionPanelWidget(QWidget):
     def on_start_btn_clicked(self):
         self.start_btn.setEnabled(False)
         if self.session.status == Session.Status.WAITING:
+            self.session.duration = int(self.duration_txt.text())
             self.session.start()
         elif self.session.status == Session.Status.ACTIVE:
             self.session.stop()
@@ -215,6 +217,7 @@ class SessionPanelWidget(QWidget):
         details_panel_layout.addWidget(self.duration_stack, details_row, 1)
 
         self.duration_txt = QLineEdit(self.duration_stack)
+        self.duration_txt.setValidator(QtGui.QDoubleValidator())
         self.duration_stack.addWidget(self.duration_txt)
         self.duration_stack.setCurrentIndex(0)
 

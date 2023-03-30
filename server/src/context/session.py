@@ -153,10 +153,11 @@ class Session(QObject):
         self.id = Session.last_id
         self._status = Session.Status.WAITING
         self._question = None
-        self.duration = 30
+        self.duration = 10
         self.participants: Dict[Participant] = {}
         self.log_file: TextIOBase = None
         self.timer = QElapsedTimer()
+        self.last_session_time = None
 
         self.communicator = SessionCommunicator(self.id, port=ctx.AppContext.mqtt_broker.port)
         self.communicator.on_status_changed = lambda status: self.on_connection_status_changed.emit(self, status)
@@ -271,17 +272,16 @@ class Session(QObject):
             return
 
         # TODO: This should be done asynchronously
-        session_time = datetime.now()
+        self.last_session_time = datetime.now()
         self.timer.restart()
-        log_folder = ctx.SESSION_LOG_FOLDER / session_time.strftime('%Y-%m-%d-%H-%M-%S')
+        log_folder = ctx.SESSION_LOG_FOLDER / self.last_session_time.strftime('%Y-%m-%d-%H-%M-%S')
         log_folder.mkdir(parents=True, exist_ok=True)
         with open(log_folder / 'session.json', 'w') as f:
             json.dump({
-                'time': session_time.isoformat(),
+                'time': self.last_session_time.isoformat(),
                 'id': self.id,
                 'question': self._question.id,
-                'duration': self.duration,
-                'participants': [participant.as_dict for participant in self.participants.values()]
+                'duration': self.duration
             }, f, indent=4)
 
         def callback(success):
@@ -302,6 +302,13 @@ class Session(QObject):
             self.status = Session.Status.WAITING
             self.on_stop.emit(self, success)
 
+        log_folder = ctx.SESSION_LOG_FOLDER / self.last_session_time.strftime('%Y-%m-%d-%H-%M-%S')
+        with open(log_folder / 'session.json', 'r+') as file:
+            data = json.load(file)
+            data['participants'] = ([participant.as_dict for participant in self.participants.values()])
+            file.seek(0)
+            json.dump(data, file, indent=4)
+        
         self.communicator.publish(
             f'swarm/session/{self.id}/control',
             json.dumps({

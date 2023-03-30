@@ -6,6 +6,7 @@ import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
+import CountdownTimer from './Countdown';
 import SessionStatusView from './StatusView';
 import QuestionDetails from './QuestionDetails';
 import BoardView from '../BoardView';
@@ -243,6 +244,10 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
             prompt={question.status === QuestionStatus.Loaded ? question.prompt : "Question not defined yet"}
             timeInSecs={question.status === QuestionStatus.Loaded ? 30 : 0}
           />
+          {/* <CountdownTimer 
+              countdownTimestampMs = {30}
+              status = {question.status}
+          /> */}
           </Paper>
           <Paper
             elevation={2}

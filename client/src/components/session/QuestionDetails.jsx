@@ -1,18 +1,16 @@
-import { React } from "react";
-
+import React from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-
-export default function QuestionDetails({ image , timeInSecs, prompt}) {
+export default function QuestionDetails({ image, prompt, timeInSecs}) {
   return (
     <Box
       sx={{
-        display: 'flex',
+        display: 'flex',  
         flexDirection: 'column',
       }}
     >
       <img
-        src={image}
+        src={image} 
         alt="question 1"
         width="100%"
       />
