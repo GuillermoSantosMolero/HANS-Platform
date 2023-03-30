@@ -65,6 +65,10 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
             setSessionStatus(SessionStatus.Active);
             break;
           }
+          case 'started': {
+            setSessionStatus(SessionStatus.Active);
+            break;
+          }
           case 'stop': {
             setSessionStatus(SessionStatus.Waiting);
             break;

@@ -258,14 +258,23 @@ class Session(QObject):
         if participant is None:
             print(f"ERROR: Participant [id={participant_id}] not found in Session [id={self.id}]")
             return
+        def checkSessionStatus ():
+            if(self.status == Session.Status.ACTIVE):
+                self.communicator.publish(
+                    f'swarm/session/{self.id}/control',
+                    json.dumps({
+                        'type': 'started'
+                    })
+            )
         if(participant.status == Participant.Status.JOINED):
             participant.status = Participant.Status.READY
+            checkSessionStatus()
         self.on_participants_ready_changed.emit(
             self.ready_participants_count,
             self.offline_participants_count,
             len(self.participants)
         )
-
+    
     def start(self) -> bool:
         if self._question is None:
             self.on_start.emit(self, False)
