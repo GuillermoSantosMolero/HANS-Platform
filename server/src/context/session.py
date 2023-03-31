@@ -24,7 +24,7 @@ class SessionCommunicator(MQTTClient):
 
         self.on_status_changed: Callable[[SessionCommunicator.Status], None] = None
         self.on_participant_ready: Callable[[int], None] = None
-        self.on_participant_update: Callable[[int, float, dict]] = None
+        self.on_participant_update: Callable[[int, dict]] = None
 
         MQTTClient.__init__(self, host, port)
         self.client.message_callback_add('swarm/session/+/control/+', self.control_message_handler)
@@ -76,9 +76,8 @@ class SessionCommunicator(MQTTClient):
         client_id = int(msg.topic.split('/')[-1])
         print(f"[session {self.session_id}] UPDATE (client={client_id}): {msg.payload}")
         payload = json.loads(msg.payload)
-
         if self.on_participant_update:
-            self.on_participant_update(client_id, payload.get('timestamp', None), payload.get('data', {}))
+            self.on_participant_update(client_id, payload.get('data', {}))
 
 class Session(QObject):
     '''
@@ -330,11 +329,11 @@ class Session(QObject):
             self.log_file.close()
             self.log_file = None
 
-    def participant_update_handler(self, participant_id: int, timestamp: float, data: dict):
+    def participant_update_handler(self, participant_id: int, data: dict):
         position_data = data.get('position', None)
+        timestamp = data.get('timeStamp', None)
         if not position_data:
             return
-
         if self.log_file:
             self.log_file.write(f"{participant_id},{timestamp},{','.join(str(e) for e in position_data)}\n")
 

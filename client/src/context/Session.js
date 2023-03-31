@@ -30,7 +30,7 @@ class Session {
         });
         });
         this.client.on('message', (topic, message) => {
-            //Guardamos los datos del topic y los spliteamos en un array de strings
+        //Guardamos los datos del topic y los spliteamos en un array de strings
         const topic_data = topic.split('/', 5);
         //Comprobamos que los datos tengan el formato correcto
         if(
@@ -57,7 +57,7 @@ class Session {
         }
         else if(topic_data[3] === 'updates') {
             if(topic_data.length !== 5) {
-            console.log('[MQTT] An update was received in a non-participant-specific topic');
+                console.log('[MQTT] An update was received in a non-participant-specific topic');
             return;
             }
             const participantId = topic_data[4];

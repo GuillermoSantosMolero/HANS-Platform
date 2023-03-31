@@ -163,7 +163,9 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
       position.norm[i]=position.norm[i]/sumPositions;
     }
     setUserMagnetPosition(position);
-    sessionRef.current.publishUpdate({data: {position: position.norm}});
+    const tiempoTranscurrido = Date.now();
+    const hoy = new Date(tiempoTranscurrido);
+    sessionRef.current.publishUpdate({data: {position: position.norm, timeStamp: hoy.toISOString()}});
   };
 
   const onLeaveSessionClick = () => {
