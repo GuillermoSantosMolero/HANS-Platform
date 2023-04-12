@@ -6,7 +6,7 @@ import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-import CountdownTimer from './Countdown';
+import CountDown from './Countdown';
 import SessionStatusView from './StatusView';
 import QuestionDetails from './QuestionDetails';
 import BoardView from '../BoardView';
@@ -22,7 +22,7 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
   const [userMagnetPosition, setUserMagnetPosition] = useState({x: 0, y: 0, norm: []});
   const [peerMagnetPositions, setPeerMagnetPositions] = useState({});
   const [centralCuePosition, setCentralCuePosition] = useState([]);
-
+  const [targetDateCountdown, setTargetDateCountdown] = useState('2023-04-01T00:00:00Z');
   useEffect(() => {
     fetch(
       `/api/session/${sessionId}`,
@@ -63,10 +63,12 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
           }
           case 'start': {
             setSessionStatus(SessionStatus.Active);
+            setTargetDateCountdown((controlMessage.targetDate+13))
             break;
           }
           case 'started': {
             setSessionStatus(SessionStatus.Active);
+            setTargetDateCountdown((controlMessage.targetDate+13))
             break;
           }
           case 'stop': {
@@ -248,12 +250,8 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
           <QuestionDetails
             image={question.status === QuestionStatus.Loaded ? question.image : ""}
             prompt={question.status === QuestionStatus.Loaded ? question.prompt : "Question not defined yet"}
-            timeInSecs={question.status === QuestionStatus.Loaded ? 30 : 0}
           />
-          {/* <CountdownTimer 
-              countdownTimestampMs = {30}
-              status = {question.status}
-          /> */}
+          {sessionStatus === SessionStatus.Active && <CountDown targetDate={targetDateCountdown} />}
           </Paper>
           <Paper
             elevation={2}

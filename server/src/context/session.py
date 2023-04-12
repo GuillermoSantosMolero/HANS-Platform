@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from enum import Enum
 from io import TextIOBase
+import time
 from typing import Callable, Dict, Union
 
 from PyQt5.QtCore import QElapsedTimer, QObject, pyqtSignal
@@ -262,7 +263,8 @@ class Session(QObject):
                 self.communicator.publish(
                     f'swarm/session/{self.id}/control',
                     json.dumps({
-                        'type': 'started'
+                        'type': 'started',
+                        'targetDate': (int(round(time.time() * 1000))+ self.duration*1000)
                     })
             )
         if(participant.status == Participant.Status.JOINED):
@@ -300,7 +302,8 @@ class Session(QObject):
         self.communicator.publish(
             f'swarm/session/{self.id}/control',
             json.dumps({
-                'type': 'start'
+                'type': 'start',
+                'targetDate': (int(round(time.time() * 1000))+ self.duration*1000)
             }),
             callback
         )

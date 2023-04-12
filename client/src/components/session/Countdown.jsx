@@ -1,36 +1,43 @@
-import {useState, useEffect} from 'react';
-import {getRemainingTimeUntilMsTimestamp} from '../../context/Countdown';
+import React, { useState, useEffect } from 'react';
 
-const defaultRemainingTime = {
-    seconds: '00',
-    minutes: '00',
-    hours: '00',
-    days: '00'
-}
+const CountDown = ({ targetDate }) => {
+  const [countdown, setCountdown] = useState(calculateCountdown(targetDate));
 
-const CountdownTimer = ({countdownTimestampMs, status}) => {
-    const [remainingTime, setRemainingTime] = useState(defaultRemainingTime);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown(calculateCountdown(targetDate));
+    }, 1000);
 
-    useEffect(() => {
-        if(status === 'active'){
-            const intervalId = setInterval(() => {
-                updateRemainingTime(countdownTimestampMs);
-            }, 1000);
-            return () => clearInterval(intervalId);
-        }
-    },[countdownTimestampMs]);
+    return () => clearInterval(interval);
+  }, [targetDate]);
 
-    function updateRemainingTime(countdown) {
-        setRemainingTime(getRemainingTimeUntilMsTimestamp(countdown));
+  function calculateCountdown(targetDate) {
+    const difference = +new Date(targetDate) - +new Date();
+    let timeLeft = {};
+
+    if (difference > 0) {
+      timeLeft = {
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
     }
 
-    return(
-        <div className="countdown-timer">
-            <span className="two-numbers">{remainingTime.minutes}</span>
-            <span>:</span>
-            <span className="two-numbers">{remainingTime.seconds}</span>
-        </div>
-    );
-}
+    return timeLeft;
+  }
 
-export default CountdownTimer;  
+  const {minutes, seconds } = countdown;
+
+  return (
+    <div>
+      {Object.keys(countdown).length ? (
+        <div>
+          <div>{minutes}:{seconds}</div>
+        </div>
+      ) : (
+        <div>Tiempo finalizado</div>
+      )}
+    </div>
+  );
+};
+
+export default CountDown;
