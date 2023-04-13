@@ -158,6 +158,7 @@ class Session(QObject):
         self.log_file: TextIOBase = None
         self.timer = QElapsedTimer()
         self.last_session_time = None
+        self.target_date = None
 
         self.communicator = SessionCommunicator(self.id, port=ctx.AppContext.mqtt_broker.port)
         self.communicator.on_status_changed = lambda status: self.on_connection_status_changed.emit(self, status)
@@ -259,12 +260,12 @@ class Session(QObject):
             print(f"ERROR: Participant [id={participant_id}] not found in Session [id={self.id}]")
             return
         def checkSessionStatus ():
-            if(self.status == Session.Status.ACTIVE):
+            if(self.status == Session.Status.ACTIVE and self.target_date is not None):
                 self.communicator.publish(
                     f'swarm/session/{self.id}/control',
                     json.dumps({
                         'type': 'started',
-                        'targetDate': (int(round(time.time() * 1000))+ self.duration*1000)
+                        'targetDate': self.target_date
                     })
             )
         if(participant.status == Participant.Status.JOINED):
@@ -298,12 +299,12 @@ class Session(QObject):
             self.log_file = open(log_folder / 'log.csv', 'w')
             self.status = Session.Status.ACTIVE
             self.on_start.emit(self, success)
-
+        self.target_date = int(round(time.time() * 1000))+ self.duration*1000
         self.communicator.publish(
             f'swarm/session/{self.id}/control',
             json.dumps({
                 'type': 'start',
-                'targetDate': (int(round(time.time() * 1000))+ self.duration*1000)
+                'targetDate': self.target_date
             }),
             callback
         )

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 const CountDown = ({ targetDate }) => {
   const [countdown, setCountdown] = useState(calculateCountdown(targetDate));
 
@@ -28,15 +29,24 @@ const CountDown = ({ targetDate }) => {
   const {minutes, seconds } = countdown;
 
   return (
-    <div>
-      {Object.keys(countdown).length ? (
-        <div>
-          <div>{minutes}:{seconds}</div>
-        </div>
-      ) : (
-        <div>Tiempo finalizado</div>
-      )}
-    </div>
+    <Box
+    sx={{
+      display: 'flex',  
+      flexDirection: 'column',
+    }}
+    >
+      <div>
+        <Typography component="h4" variant="h6" textAlign='center'>
+          {Object.keys(countdown).length ? (
+            <div>
+              <div>{minutes<10 && 0}{minutes}:{seconds<10 && 0}{seconds}</div>
+            </div>
+          ) : (
+            <div>Tiempo finalizado</div>
+          )}
+        </Typography>
+      </div>
+    </Box>
   );
 };
 
