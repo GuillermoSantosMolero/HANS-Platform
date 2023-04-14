@@ -156,9 +156,11 @@ class Session(QObject):
         self.duration = 10
         self.participants: Dict[Participant] = {}
         self.log_file: TextIOBase = None
+        self.resume_file: TextIOBase = None
         self.timer = QElapsedTimer()
         self.last_session_time = None
         self.target_date = None
+        self.answers = {}
 
         self.communicator = SessionCommunicator(self.id, port=ctx.AppContext.mqtt_broker.port)
         self.communicator.on_status_changed = lambda status: self.on_connection_status_changed.emit(self, status)
@@ -297,6 +299,7 @@ class Session(QObject):
 
         def callback(success):
             self.log_file = open(log_folder / 'log.csv', 'w')
+            self.resume_file = open(log_folder / 'resume.csv', 'w')
             self.status = Session.Status.ACTIVE
             self.on_start.emit(self, success)
         self.target_date = int(round(time.time() * 1000))+ self.duration*1000
@@ -332,6 +335,11 @@ class Session(QObject):
         if self.log_file:
             self.log_file.close()
             self.log_file = None
+        if self.resume_file:
+            for a in self.answers:
+                self.resume_file.write(f"{a},{self.answers[a]}\n")
+            self.resume_file.close()
+            self.resume_file = None
 
     def participant_update_handler(self, participant_id: int, data: dict):
         position_data = data.get('position', None)
@@ -340,6 +348,8 @@ class Session(QObject):
             return
         if self.log_file:
             self.log_file.write(f"{participant_id},{timestamp},{','.join(str(e) for e in position_data)}\n")
+            self.answers[participant_id]=timestamp+","+','.join(str(e) for e in position_data)
+            print(len(self.answers))
 
         # TODO: Maybe the server should not rely the calculation of the central cue
         #       position to the clients, but instead calculate it every X milliseconds
