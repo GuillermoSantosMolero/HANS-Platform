@@ -15,11 +15,11 @@ import { Session, SessionStatus } from '../../context/Session';
 import { QuestionStatus } from '../../context/Question';
 
 
-export default function SessionView({ sessionId, participantId, onLeave=()=>{} }) {
+export default function SessionView({ sessionId, participantId, onLeave = () => { } }) {
   const sessionRef = useRef(null);
   const [sessionStatus, setSessionStatus] = useState(SessionStatus.Joining);
-  const [question, setQuestion] = useState({status: QuestionStatus.Undefined});
-  const [userMagnetPosition, setUserMagnetPosition] = useState({x: 0, y: 0, norm: []});
+  const [question, setQuestion] = useState({ status: QuestionStatus.Undefined });
+  const [userMagnetPosition, setUserMagnetPosition] = useState({ x: 0, y: 0, norm: [] });
   const [peerMagnetPositions, setPeerMagnetPositions] = useState({});
   const [centralCuePosition, setCentralCuePosition] = useState([]);
   const [targetDateCountdown, setTargetDateCountdown] = useState('2023-04-01T00:00:00Z');
@@ -33,11 +33,11 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
         },
       }
     ).then(res => {
-      if(res.status === 200) {
+      if (res.status === 200) {
         res.json().then(data => {
           setSessionStatus(SessionStatus.Waiting);
-          if(data.question_id) {
-            setQuestion({status: QuestionStatus.Loading, id: data.question_id});
+          if (data.question_id) {
+            setQuestion({ status: QuestionStatus.Loading, id: data.question_id });
           }
         });
       } else {
@@ -49,10 +49,10 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
 
     sessionRef.current = new Session(sessionId, participantId,
       (controlMessage) => {
-        switch(controlMessage.type) {
+        switch (controlMessage.type) {
           case 'setup': {
-            if(controlMessage.question_id === null) {
-              setQuestion({status: QuestionStatus.Undefined});
+            if (controlMessage.question_id === null) {
+              setQuestion({ status: QuestionStatus.Undefined });
             } else {
               setQuestion({
                 status: QuestionStatus.Loading,
@@ -63,16 +63,32 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
           }
           case 'start': {
             setSessionStatus(SessionStatus.Active);
-            setTargetDateCountdown((controlMessage.targetDate+13))
+            setTargetDateCountdown((controlMessage.targetDate + 13))
             break;
           }
           case 'started': {
             setSessionStatus(SessionStatus.Active);
-            setTargetDateCountdown((controlMessage.targetDate+13))
+            setTargetDateCountdown((controlMessage.targetDate + 13))
+            let positions = JSON.parse(controlMessage.positions);
+            let iterator = 0;
+            for (const participant in positions) {
+              setPeerMagnetPositions((peerPositions) => {
+                if(Object.keys(peerPositions).length===iterator){
+                  ++iterator;
+                  return {
+                    ...peerPositions,
+                    [participant]: positions[participant].slice(positions[participant].indexOf('Z') + 2).split(',').map(parseFloat)
+                  }
+                }else{
+                  return peerPositions;
+                }
+              });
+            }
             break;
           }
           case 'stop': {
             setSessionStatus(SessionStatus.Waiting);
+            setUserMagnetPosition({ x: 0, y: 0, norm: [] })
             break;
           }
           default: break;
@@ -90,7 +106,7 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
 
   useEffect(() => {
     let ignore = false;
-    if(question.status === QuestionStatus.Loading) {
+    if (question.status === QuestionStatus.Loading) {
       fetch(
         `/api/question/${question.id}`,
         {
@@ -100,9 +116,9 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
           },
         }
       ).then(res => {
-        if(res.status === 200) {
+        if (res.status === 200) {
           res.json().then(data => {
-            if(!ignore) {
+            if (!ignore) {
               setQuestion({
                 status: QuestionStatus.Loaded,
                 id: data.id,
@@ -110,10 +126,9 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
                 answers: data.answers,
                 image: `/api/question/${data.id}/image`,
               });
-              sessionRef.current.publishControl({type: 'ready'});
+              sessionRef.current.publishControl({ type: 'ready' });
             }
           });
-          setUserMagnetPosition({x: 0, y: 0, norm: []})
         } else {
           res.text().then(msg => console.log(msg));
         }
@@ -126,9 +141,10 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
 
   useEffect(() => {
     // Update central Cue based on magnet positions
+    console.log(peerMagnetPositions)
     const usablePeerPositions = Object.keys(peerMagnetPositions).map(
       k => peerMagnetPositions[k]
-    ).filter(peerPosition => peerPosition.length === userMagnetPosition.norm.length);
+    ).filter(peerPosition => peerPosition.length === question.answers.length);
     setCentralCuePosition(
       usablePeerPositions.reduce(
         (cuePosition, peerPosition) => cuePosition.map(
@@ -156,18 +172,18 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
   }, [question]);*/
 
   const onUserMagnetMove = (position) => {
-    if(sessionStatus !== SessionStatus.Active) return;
+    if (sessionStatus !== SessionStatus.Active) return;
     let sumPositions = 0
-    for(let i=0; i<position.norm.length;i++)
-      sumPositions+=position.norm[i];
-    if(sumPositions>1){
-      for(let i=0; i<position.norm.length;i++)
-      position.norm[i]=position.norm[i]/sumPositions;
+    for (let i = 0; i < position.norm.length; i++)
+      sumPositions += position.norm[i];
+    if (sumPositions > 1) {
+      for (let i = 0; i < position.norm.length; i++)
+        position.norm[i] = position.norm[i] / sumPositions;
     }
     setUserMagnetPosition(position);
     const tiempoTranscurrido = Date.now();
     const hoy = new Date(tiempoTranscurrido);
-    sessionRef.current.publishUpdate({data: {position: position.norm, timeStamp: hoy.toISOString()}});
+    sessionRef.current.publishUpdate({ data: { position: position.norm, timeStamp: hoy.toISOString() } });
   };
 
   const onLeaveSessionClick = () => {
@@ -184,7 +200,7 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
         }
       }
     ).then(res => {
-      if(res.status === 200) {
+      if (res.status === 200) {
         res.json().then(data => {
         });
       } else {
@@ -211,7 +227,7 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
         component="main"
         height='100vh'
         sx={{
-          display:'flex',
+          display: 'flex',
           flexDirection: 'column',
         }}
       >
@@ -247,11 +263,11 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
               p: 1,
             }}
           >
-          <QuestionDetails
-            image={question.status === QuestionStatus.Loaded ? question.image : ""}
-            prompt={question.status === QuestionStatus.Loaded ? question.prompt : "Question not defined yet"}
-          />
-          {sessionStatus === SessionStatus.Active && <CountDown targetDate={targetDateCountdown} />}
+            <QuestionDetails
+              image={question.status === QuestionStatus.Loaded ? question.image : ""}
+              prompt={question.status === QuestionStatus.Loaded ? question.prompt : "Question not defined yet"}
+            />
+            {sessionStatus === SessionStatus.Active && <CountDown targetDate={targetDateCountdown} />}
           </Paper>
           <Paper
             elevation={2}
@@ -263,15 +279,15 @@ export default function SessionView({ sessionId, participantId, onLeave=()=>{} }
               flexDirection: 'column',
             }}
           >
-          <BoardView
-            answers={question.status === QuestionStatus.Loaded ? question.answers : []}
-            centralCuePosition={centralCuePosition}
-            peerMagnetPositions={Object.keys(peerMagnetPositions).map(
-              k => peerMagnetPositions[k]
-            )}
-            userMagnetPosition={userMagnetPosition}
-            onUserMagnetMove={onUserMagnetMove}
-          />
+            <BoardView
+              answers={question.status === QuestionStatus.Loaded ? question.answers : []}
+              centralCuePosition={centralCuePosition}
+              peerMagnetPositions={Object.keys(peerMagnetPositions).map(
+                k => peerMagnetPositions[k]
+              )}
+              userMagnetPosition={userMagnetPosition}
+              onUserMagnetMove={onUserMagnetMove}
+            />
           </Paper>
         </Box>
       </Box>

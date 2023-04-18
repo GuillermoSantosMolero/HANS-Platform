@@ -267,7 +267,8 @@ class Session(QObject):
                     f'swarm/session/{self.id}/control',
                     json.dumps({
                         'type': 'started',
-                        'targetDate': self.target_date
+                        'targetDate': self.target_date,
+                        'positions': json.dumps(self.answers)
                     })
             )
         if(participant.status == Participant.Status.JOINED):
@@ -340,6 +341,7 @@ class Session(QObject):
                 self.resume_file.write(f"{a},{self.answers[a]}\n")
             self.resume_file.close()
             self.resume_file = None
+            self.answers = {}
 
     def participant_update_handler(self, participant_id: int, data: dict):
         position_data = data.get('position', None)

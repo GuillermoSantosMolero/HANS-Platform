@@ -62,7 +62,7 @@ class Session {
             }
             const participantId = topic_data[4];
             if(participantId !== this.participantId) {  // Discard self updates
-            updateCallback(participantId, JSON.parse(message));
+                updateCallback(participantId, JSON.parse(message));
             }
         }
         });
