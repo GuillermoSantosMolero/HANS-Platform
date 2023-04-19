@@ -18,8 +18,7 @@ function App() {
     sessionStorage.setItem('participant_id', participantId);
     sessionStorage.setItem('username', username);
     navigate('/session');
-  }
-
+  };
   const leaveSession = () => {
     sessionStorage.removeItem('session_id');
     sessionStorage.removeItem('participant_id');
