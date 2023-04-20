@@ -94,8 +94,8 @@ class ServerAPI(Thread, QObject):
             session = AppContext.sessions.get(session_id, None)
             if session is None:
                 return "Session not found", 404
-
-            if any(username == participant.username and participant.status!=Participant.Status.OFFLINE for participant in session.participants.values()):
+            print(username.lower())
+            if any(username.lower() == participant.username.lower() and participant.status!=Participant.Status.OFFLINE for participant in session.participants.values()):
                 return "Participant already joined session", 400
 
             participant = session.add_participant(username)
