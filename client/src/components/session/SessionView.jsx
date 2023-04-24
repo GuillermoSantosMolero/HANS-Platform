@@ -10,7 +10,6 @@ import CountDown from './Countdown';
 import SessionStatusView from './StatusView';
 import QuestionDetails from './QuestionDetails';
 import BoardView from '../BoardView';
-
 import { Session, SessionStatus } from '../../context/Session';
 import { QuestionStatus } from '../../context/Question';
 
@@ -72,19 +71,16 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
             setSessionStatus(SessionStatus.Active);
             setTargetDateCountdown((controlMessage.targetDate + 13))
             let positions = JSON.parse(controlMessage.positions);
-            let iterator = 0;
-            for (const participant in positions) {
-              setPeerMagnetPositions((peerPositions) => {
-                if(Object.keys(peerPositions).length===iterator){
-                  ++iterator;
+            if (peerMagnetPositions.length !== 0) {
+              for (const participant in positions) {
+                let usablePeerPositions = positions[participant].slice(positions[participant].indexOf('Z') + 2).split(',').map(parseFloat)
+                setPeerMagnetPositions((peerPositions) => {
                   return {
                     ...peerPositions,
-                    [participant]: positions[participant].slice(positions[participant].indexOf('Z') + 2).split(',').map(parseFloat)
+                    [participant]: usablePeerPositions
                   }
-                }else{
-                  return peerPositions;
-                }
-              });
+                });
+              }
             }
             break;
           }
@@ -98,12 +94,14 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
       },
       (participantId, updateMessage) => {
         setPeerMagnetPositions((peerPositions) => {
+          console.log(peerPositions)
           return {
             ...peerPositions,
             [participantId]: updateMessage.data.position
           }
         });
-      });
+      }
+      );
   }, [sessionId, participantId]);
 
   useEffect(() => {
@@ -143,18 +141,19 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
 
   useEffect(() => {
     // Update central Cue based on magnet positions
-    console.log(peerMagnetPositions)
-    const usablePeerPositions = Object.keys(peerMagnetPositions).map(
-      k => peerMagnetPositions[k]
-    ).filter(peerPosition => peerPosition.length === question.answers.length);
-    setCentralCuePosition(
-      usablePeerPositions.reduce(
-        (cuePosition, peerPosition) => cuePosition.map(
-          (value, i) => value + peerPosition[i]
-        ),
-        userMagnetPosition.norm
-      ).map(value => value / (1 + usablePeerPositions.length))
-    );
+    if (peerMagnetPositions && peerMagnetPositions.length !== 0) {
+      const usablePeerPositions = Object.keys(peerMagnetPositions).map(
+        k => peerMagnetPositions[k]
+      ).filter(peerPosition => peerPosition.length === question.answers.length);
+      setCentralCuePosition(
+        usablePeerPositions.reduce(
+          (cuePosition, peerPosition) => cuePosition.map(
+            (value, i) => value + peerPosition[i]
+          ),
+          userMagnetPosition.norm
+        ).map(value => value / (1 + usablePeerPositions.length))
+      );
+    }
   }, [userMagnetPosition, peerMagnetPositions])
 
   // DEBUG-ONLY
@@ -284,7 +283,7 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
             <BoardView
               answers={question.status === QuestionStatus.Loaded ? question.answers : []}
               centralCuePosition={centralCuePosition}
-              peerMagnetPositions={Object.keys(peerMagnetPositions).map(
+              peerMagnetPositions={peerMagnetPositions && Object.keys(peerMagnetPositions).map(
                 k => peerMagnetPositions[k]
               )}
               userMagnetPosition={userMagnetPosition}

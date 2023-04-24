@@ -97,7 +97,6 @@ class SessionPanelWidget(QWidget):
             return
 
         self.add_participant_widget(participant)
-        self.start_btn.setEnabled(False)
         self.participants_ready_txt.setText(f"{session.ready_participants_count}/{len(session.participants)} participants")
 
     @pyqtSlot(int, int, int)

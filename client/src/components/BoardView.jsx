@@ -142,7 +142,7 @@ export default function BoardView({
       />
       {/*Rectángulo que marca las respuestas de otros participantes*/}
       <g transform={`translate(-${halfMagnetSize}, -${halfMagnetSize})`}>
-        {peerMagnetPositions.map(normPosition => denormalizePosition(normPosition)).map((point, i) => (
+        {peerMagnetPositions && peerMagnetPositions.map(normPosition => denormalizePosition(normPosition)).map((point, i) => (
           <rect
             key={i}
             x={point.x}

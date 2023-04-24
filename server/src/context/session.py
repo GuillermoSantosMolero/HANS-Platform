@@ -232,7 +232,7 @@ class Session(QObject):
         inList = False
         participantReturn = None
         for participant in self.participants.values():
-            if(participant.username==username):
+            if(participant.username.lower() == username.lower()):
                 inList = True
                 participant.status = Participant.Status.JOINED
                 participantReturn = participant
