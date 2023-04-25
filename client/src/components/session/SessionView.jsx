@@ -73,13 +73,15 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
             let positions = JSON.parse(controlMessage.positions);
             if (peerMagnetPositions.length !== 0) {
               for (const participant in positions) {
-                let usablePeerPositions = positions[participant].slice(positions[participant].indexOf('Z') + 2).split(',').map(parseFloat)
-                setPeerMagnetPositions((peerPositions) => {
-                  return {
-                    ...peerPositions,
-                    [participant]: usablePeerPositions
-                  }
-                });
+                let usablePeerPositions = positions[participant].slice(positions[participant].indexOf('Z') + 2).split(',').map(parseFloat);
+                if(participant !== participantId){
+                  setPeerMagnetPositions((peerPositions) => {
+                    return {
+                      ...peerPositions,
+                      [participant]: usablePeerPositions
+                    }
+                  });
+                }
               }
             }
             break;
@@ -87,6 +89,7 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
           case 'stop': {
             setSessionStatus(SessionStatus.Waiting);
             setUserMagnetPosition({ x: 0, y: 0, norm: [] })
+            setPeerMagnetPositions({});
             break;
           }
           default: break;
