@@ -5,6 +5,7 @@ import Header from './components/Header';
 import SessionLogin from './components/SessionLogin';
 import SessionView from './components/session/SessionView';
 import DebugBoardView from "./components/DebugBoardView";
+import AdminView from './components/admin/AdminView.jsx';
 
 function App() {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ function App() {
           )
         }/>
         <Route path="/debug" element={<DebugBoardView/>} />
+        <Route path="/admin" element={<AdminView/>} />
       </Routes>
     </>
   )

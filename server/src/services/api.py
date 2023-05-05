@@ -27,8 +27,16 @@ class ServerAPI(Thread, QObject):
 
             return jsonify(session.as_dict)
 
-        @self.app.route('/api/session', methods=['GET'])
+        @self.app.route('/api/session', methods=['POST'])
         def api_get_all_sessions():
+            print(request.json['user'])
+            if 'user' not in request.json:
+                return "Invalid request", 400
+            username = request.json['user']
+            password = request.json['pass']
+            if(username!="admin" or password!="admin"):
+                return "Check if your credentials are correct please", 400
+            
             return jsonify([session.as_dict for session in AppContext.sessions.values()])
 
         @self.app.route('/api/session', methods=['POST'])
@@ -115,6 +123,16 @@ class ServerAPI(Thread, QObject):
             else:
                 return "Participant not found", 404
             return "Bye"
+        
+        @self.app.route('/api/question')
+        def api_get_all_questions():
+            questions = AppContext.questions
+            response = []
+            if questions is None:
+                return "Questions not found", 404
+            for clave, valor in questions.items():
+                response.append(valor.as_dict)
+            return jsonify(response)
 
         @self.app.route('/api/question/<int:question_id>')
         def api_question_handle(question_id: int):
@@ -140,6 +158,19 @@ class ServerAPI(Thread, QObject):
                 return send_from_directory(self.app.static_folder, 'index.html')
 
             return send_from_directory(self.app.static_folder, path)
+
+        # Peticiones para el admin
+        @self.app.route('/api/admin/login', methods=['POST'])
+        def api_admin_login():
+            if 'user' not in request.json:
+                return "Invalid request", 400
+            username = request.json['user']
+            password = request.json['pass']
+            if(username!="admin" or password!="admin"):
+                return "Check if your credentials are correct please", 400
+            
+            return jsonify({"status":"ok"})
+
 
         self.server = make_server(host, port, self.app, threaded=True)
         self.ctx = self.app.app_context()
