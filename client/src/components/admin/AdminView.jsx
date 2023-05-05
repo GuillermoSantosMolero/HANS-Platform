@@ -72,6 +72,10 @@ export default function AdminView() {
 
         }
     }, [status]);
+    
+    const handleSessionCreated = (newSession) => {
+        setSessions([...sessions, newSession]);
+    }
     return (
         <Container component="main" maxWidth="l">
             <Backdrop
@@ -95,8 +99,11 @@ export default function AdminView() {
                 }}
             >
                 <AdminInterface
+                    username={username}
+                    password={password}
                     questions={questions}
                     sessions={sessions}
+                    onSessionCreated={handleSessionCreated}
                 ></AdminInterface>
             </Box>
         </Container>

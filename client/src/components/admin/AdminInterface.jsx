@@ -1,16 +1,40 @@
-import { React, useEffect, useState } from "react";
+import { React, useEffect, useState, useRef } from "react";
 
 import './AdminInterface.css';
+import { Session, SessionStatus } from '../../context/Session';
+import { QuestionStatus } from '../../context/Question';
 
-export default function AdminInterface({ questions, sessions }) {
-  const [selectedSession, setSelectedSession] = useState({ id: "", duration: 0, question_id: "", status: "" });
+export default function AdminInterface({ username, password, questions, sessions, onSessionCreated }) {
+  const [selectedSession, setSelectedSession] = useState({ id: "0", duration: 0, question_id: "", status: "" });
+  const [currentSession, setCurrentSession] = useState(null);
+  const [sessionStatus, setSessionStatus] = useState(SessionStatus.Joining);
+  const [question, setQuestion] = useState({ status: QuestionStatus.Undefined });
+
   useEffect(() => {
-    if(sessions){
+    if (sessions) {
       setSelectedSession(sessions[0]);
-      if(questions)
-        setSelectedSession({ ...selectedSession, question_id: questions[0].id})
+      if (questions)
+        setSelectedSession({ ...selectedSession, question_id: questions[0].id })
     }
-  },[sessions],[questions]);
+  }, [questions]);
+  
+  useEffect(() => {
+    if (selectedSession) {
+      setCurrentSession(new Session(selectedSession.id, 0,
+        (controlMessage) => {
+          switch (controlMessage.type) {
+            case 'ready': {
+
+              break;
+            }
+            default: break;
+          }
+        },
+        null
+      ));
+    }
+  }, [selectedSession]);
+
 
   const handleSessionChange = (event) => {
     const sessionId = parseInt(event.target.value);
@@ -20,10 +44,35 @@ export default function AdminInterface({ questions, sessions }) {
     setSelectedSession(session);
   }
   const handleQuestionChange = (event) => {
-    setSelectedSession({ ...selectedSession, question_id: event.target.value});
+    setSelectedSession({ ...selectedSession, question_id: event.target.value });
   }
   const createSession = (event) => {
-      
+    fetch(
+      `/api/createSession`,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+          {
+            user: username,
+            pass: password
+          }
+        )
+      }
+    ).then(res => {
+      if (res.status === 200) {
+        res.json().then(data => {
+          onSessionCreated(data);
+        });
+      } else {
+        res.text().then(msg => console.log(msg));
+      }
+    }).catch(error => {
+      console.log(error);
+    });
   }
   return (
     <div className="main">
@@ -34,7 +83,7 @@ export default function AdminInterface({ questions, sessions }) {
             <option key={session.id} value={session.id}>Session {session.id}</option>
           ))}
         </select>
-        <button>New Session</button>
+        <button onClick={createSession}>New Session</button>
       </div>
       <div className="sessiondetails">
         <div>
@@ -44,7 +93,7 @@ export default function AdminInterface({ questions, sessions }) {
         <label>Id:</label>
         <input type="text" readOnly value={selectedSession && selectedSession.id} />
         <label>Duration:</label>
-        <input type="text" value={selectedSession && selectedSession.duration} onChange={e => setSelectedSession({ ...selectedSession, duration: e.target.value})}/>
+        <input type="text" value={selectedSession && selectedSession.duration || ""} onChange={e => setSelectedSession({ ...selectedSession, duration: e.target.value })} />
         <label>Question:</label>
         <select onChange={handleQuestionChange}>
           {questions && questions.map(question => (
@@ -52,7 +101,7 @@ export default function AdminInterface({ questions, sessions }) {
           ))}
         </select>
       </div>
-      <div className="startsession" onClick={createSession}>
+      <div className="startsession" >
         <button>Start</button>
         <input type="text" readOnly />
       </div>

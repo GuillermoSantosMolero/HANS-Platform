@@ -39,14 +39,6 @@ class ServerAPI(Thread, QObject):
             
             return jsonify([session.as_dict for session in AppContext.sessions.values()])
 
-        @self.app.route('/api/session', methods=['POST'])
-        def api_create_session():
-            session = Session()
-            AppContext.sessions[session.id] = session
-
-            self.on_session_created.emit(session)
-            return jsonify(session.as_dict)
-
         @self.app.route('/api/session/<int:session_id>', methods=['POST'])
         def api_edit_session(session_id: int):
             session = AppContext.sessions.get(session_id, None)
@@ -170,7 +162,19 @@ class ServerAPI(Thread, QObject):
                 return "Check if your credentials are correct please", 400
             
             return jsonify({"status":"ok"})
-
+        
+        @self.app.route('/api/createSession', methods=['POST'])
+        def api_create_session():
+            print(request.json['user'])
+            if 'user' not in request.json:
+                return "Invalid request", 400
+            username = request.json['user']
+            password = request.json['pass']
+            if(username!="admin" or password!="admin"):
+                return "Check if your credentials are correct please", 400
+            session = Session()
+            AppContext.sessions[session.id] = session
+            return jsonify(session.as_dict)
 
         self.server = make_server(host, port, self.app, threaded=True)
         self.ctx = self.app.app_context()
