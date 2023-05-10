@@ -76,13 +76,18 @@ class ServerAPI(Thread, QObject):
 
             return jsonify(session.as_dict)
 
-        @self.app.route('/api/session/<int:session_id>/participants', methods=['GET'])
+        @self.app.route('/api/session/<int:session_id>/allParticipants', methods=['POST'])
         def api_session_get_all_participants(session_id: int):
+            if 'user' not in request.json:
+                return "Invalid request", 400
+            username = request.json['user']
+            password = request.json['pass']
+            if(username!="admin" or password!="admin"):
+                return "Check if your credentials are correct please", 400
             session = AppContext.sessions.get(session_id, None)
             if session is None:
                 return "Session not found", 404
-
-            return jsonify([participant.as_dict for participant in session.participants])
+            return jsonify([participant.as_dict for participant in session.participants.values()])
 
         # función que escucha la petición del componente sessionLogin
         @self.app.route('/api/session/<int:session_id>/participants', methods=['POST'])
@@ -165,7 +170,6 @@ class ServerAPI(Thread, QObject):
         
         @self.app.route('/api/createSession', methods=['POST'])
         def api_create_session():
-            print(request.json['user'])
             if 'user' not in request.json:
                 return "Invalid request", 400
             username = request.json['user']

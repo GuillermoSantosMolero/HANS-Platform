@@ -5,7 +5,8 @@ import { Session, SessionStatus } from '../../context/Session';
 import { QuestionStatus } from '../../context/Question';
 
 export default function AdminInterface({ username, password, questions, sessions, onSessionCreated }) {
-  const [selectedSession, setSelectedSession] = useState({ id: "0", duration: 0, question_id: "", status: "" });
+  const [selectedSession, setSelectedSession] = useState({ id: 0, duration: 0, question_id: "", status: "" });
+  const [participantList, setParticipantList] = useState(null);
   const [currentSession, setCurrentSession] = useState(null);
   const [sessionStatus, setSessionStatus] = useState(SessionStatus.Joining);
   const [question, setQuestion] = useState({ status: QuestionStatus.Undefined });
@@ -17,25 +18,51 @@ export default function AdminInterface({ username, password, questions, sessions
         setSelectedSession({ ...selectedSession, question_id: questions[0].id })
     }
   }, [questions]);
-  
+
   useEffect(() => {
-    if (selectedSession) {
+    if (selectedSession.id !== 0) {
+      console.log(selectedSession.id);
+      getParticipantsBySession();
       setCurrentSession(new Session(selectedSession.id, 0,
         (controlMessage) => {
-          switch (controlMessage.type) {
-            case 'ready': {
-
-              break;
-            }
-            default: break;
+          if (controlMessage.participant !== 0) {
+            if(selectedSession.id===controlMessage.session)
+              console.log(selectedSession.id+", "+controlMessage.session);
+              getParticipantsBySession();
           }
-        },
-        null
+        }
       ));
     }
-  }, [selectedSession]);
+  }, [selectedSession.id]);
 
-
+  const getParticipantsBySession = () => {
+    fetch(
+      `/api/session/${selectedSession.id}/allParticipants`,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+          {
+            user: username,
+            pass: password
+          }
+        )
+      }
+    ).then(res => {
+      if (res.status === 200) {
+        res.json().then(data => {
+          setParticipantList(data);
+        });
+      } else {
+        res.text().then(msg => console.log(msg));
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+  }
   const handleSessionChange = (event) => {
     const sessionId = parseInt(event.target.value);
     const session = sessions.find(s => s.id === sessionId);
@@ -86,14 +113,10 @@ export default function AdminInterface({ username, password, questions, sessions
         <button onClick={createSession}>New Session</button>
       </div>
       <div className="sessiondetails">
-        <div>
-          <p>Valor de sessions:</p>
-          <pre>{JSON.stringify(selectedSession, null, 2)}</pre>
-        </div>
         <label>Id:</label>
         <input type="text" readOnly value={selectedSession && selectedSession.id} />
         <label>Duration:</label>
-        <input type="text" value={selectedSession && selectedSession.duration || ""} onChange={e => setSelectedSession({ ...selectedSession, duration: e.target.value })} />
+        <input type="text" value={selectedSession ? selectedSession.duration : ""} onChange={e => setSelectedSession({ ...selectedSession, duration: e.target.value })} />
         <label>Question:</label>
         <select onChange={handleQuestionChange}>
           {questions && questions.map(question => (
@@ -103,7 +126,7 @@ export default function AdminInterface({ username, password, questions, sessions
       </div>
       <div className="startsession" >
         <button>Start</button>
-        <input type="text" readOnly />
+        <textarea className="inputParticipant" readOnly value={participantList ? participantList.map(p => `${p.username} -> ${p.status}`).join("\n") : "Sin participantes todavía"} />
       </div>
     </div>
   );

@@ -18,7 +18,6 @@ export default function AdminView() {
     const joinSession = (username, password, status) => {
         setUsername(username);
         setPassword(password);
-        console.log(status);
         setStatus(status);
     };
     useEffect(() => {
@@ -61,7 +60,6 @@ export default function AdminView() {
                 if (res.status === 200) {
                     res.json().then(data => {
                         setQuestions(data);
-                        console.log(data);
                     });
                 } else {
                     res.text().then(msg => console.log(msg));

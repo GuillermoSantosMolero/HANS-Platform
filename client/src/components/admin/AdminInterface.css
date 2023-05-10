@@ -70,3 +70,8 @@ label {
     margin: 5px;
     font-size: 16px;
 }
+.inputParticipant {
+    height: '100px';
+    overflow: 'auto';
+    max-width: '50px';
+}

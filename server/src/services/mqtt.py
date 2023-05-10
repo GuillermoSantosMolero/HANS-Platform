@@ -6,7 +6,7 @@ MOSQUITTO_PATH = "mosquitto"
 
 
 class BrokerWrapper:
-    def __init__(self, host, port=9001):
+    def __init__(self, host, port=1883):
         self.port = port
         self.thread = None
         self.process = None
