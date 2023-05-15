@@ -86,10 +86,17 @@ class Session {
     }
     //Para que el cliente publique un mensaje de control en el que incluirá datos en formato JSON
     publishControl(controlMessage) {
-        this.client.publish(
-            `swarm/session/${this.sessionId}/control/${this.participantId}`,
-            JSON.stringify(controlMessage)
-        );
+        if(this.participantId!==0){
+            this.client.publish(
+                `swarm/session/${this.sessionId}/control/${this.participantId}`,
+                JSON.stringify(controlMessage)
+            );
+        }else{
+            this.client.publish(
+                `swarm/session/${this.sessionId}/control`,
+                JSON.stringify(controlMessage)
+            );
+        }
     }
     //Para que el cliente publique un mensaje de actualización en el que incluirá datos en formato JSON
     //Típicamente estos datos harán referencia a la posición de la bolita de nuestro componenete BoardView

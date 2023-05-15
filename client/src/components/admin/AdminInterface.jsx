@@ -10,7 +10,9 @@ export default function AdminInterface({ username, password, questions, sessions
   const [currentSession, setCurrentSession] = useState(null);
   const [sessionStatus, setSessionStatus] = useState(SessionStatus.Joining);
   const [question, setQuestion] = useState({ status: QuestionStatus.Undefined });
-
+  const [targetDateCountdown, setTargetDateCountdown] = useState('2023-04-01T00:00:00Z');
+  const [waitingCountDown, setWaitingCountDown] = useState(false);
+  let timerId;
   useEffect(() => {
     if (sessions) {
       setSelectedSession(sessions[0]);
@@ -21,14 +23,21 @@ export default function AdminInterface({ username, password, questions, sessions
 
   useEffect(() => {
     if (selectedSession.id !== 0) {
-      console.log(selectedSession.id);
       getParticipantsBySession();
       setCurrentSession(new Session(selectedSession.id, 0,
         (controlMessage) => {
           if (controlMessage.participant !== 0) {
-            if(selectedSession.id===controlMessage.session)
-              console.log(selectedSession.id+", "+controlMessage.session);
-              getParticipantsBySession();
+            if (selectedSession.id === controlMessage.session)
+              switch (controlMessage.type) {
+                case 'join':
+                  getParticipantsBySession();
+                  break;
+                case 'ready':
+                  getParticipantsBySession();
+                  break;
+                default:
+                  break;
+              }
           }
         }
       ));
@@ -72,6 +81,26 @@ export default function AdminInterface({ username, password, questions, sessions
   }
   const handleQuestionChange = (event) => {
     setSelectedSession({ ...selectedSession, question_id: event.target.value });
+    currentSession.publishControl({ type: 'setup', question_id: event.target.value });
+    getParticipantsBySession();
+  }
+
+  const startSession = (event) => {
+    currentSession.publishControl({ type: 'start', targetDate: Date.now() + selectedSession.duration * 1000 });
+    waitOrCloseSession();
+  }
+  const waitOrCloseSession = () => {
+    if(!waitingCountDown) {
+      setWaitingCountDown(true);
+      timerId = setTimeout(() => {
+        currentSession.publishControl({ type: 'stop' });
+        setWaitingCountDown(false);
+      }, selectedSession.duration * 1000);
+    } else{
+      clearTimeout(timerId);
+      currentSession.publishControl({ type: 'stop' });
+      setWaitingCountDown(false);
+    }
   }
   const createSession = (event) => {
     fetch(
@@ -125,7 +154,8 @@ export default function AdminInterface({ username, password, questions, sessions
         </select>
       </div>
       <div className="startsession" >
-        <button>Start</button>
+        <button onClick={startSession}>{waitingCountDown ? "Stop" : "Start"}</button>
+        <label>Ready: {participantList ? participantList.filter(participant => participant.status === 'ready').length : 0}/{participantList ? participantList.length : 0}</label>
         <textarea className="inputParticipant" readOnly value={participantList ? participantList.map(p => `${p.username} -> ${p.status}`).join("\n") : "Sin participantes todavía"} />
       </div>
     </div>

@@ -129,7 +129,7 @@ export default function SessionView({ sessionId, participantId, onLeave = () => 
                 answers: data.answers,
                 image: `/api/question/${data.id}/image`,
               });
-              sessionRef.current.publishControl({ type: 'ready' , participant: participantId});
+              sessionRef.current.publishControl({ type: 'ready' , participant: participantId, session: sessionId});
             }
           });
         } else {
